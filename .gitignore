@@ -1,0 +1,106 @@
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+*.userprefs
+
+# Build results
+bin/
+obj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+
+# Visual Studio cache/options
+.vs/
+
+# ReSharper
+.resharper
+.resharper.user
+*.resharper
+*.resharper.user
+*.DotSettings
+*.DotSettings.user
+
+# Rider
+.idea/
+*.sln.iml
+*.sln.iml
+
+# Files built by Visual Studio
+*.o
+*.a
+*.lib
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.class
+*.jar
+*.war
+*.rar
+
+# .NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.msix
+*.msix.signingCert
+*.appxbundle
+*.appxupload
+
+# User-specific files (Local)
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+
+# Secrets and credentials
+secrets.json
+.secrets/
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.pfx
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node modules (if applicable)
+node_modules/
+npm-debug.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# NuGet
+.nuget/
+
+# Backup files
+*.backup
+*.bak~
