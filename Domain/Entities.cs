@@ -2,6 +2,7 @@ namespace BarberBooking.Api.Domain;
 
 public enum UserRole { SuperAdmin, TenantAdmin, Barber, Customer }
 public enum AppointmentStatus { Confirmed, Cancelled, Completed, NoShow }
+public enum OutboxMessageType { AppointmentCreated, AppointmentCancelled }
 
 public sealed class Tenant
 {
@@ -11,6 +12,7 @@ public sealed class Tenant
     public string? Phone { get; set; }
     public string? Address { get; set; }
     public string TimeZoneId { get; set; } = "America/Sao_Paulo";
+    public int SlotIntervalMinutes { get; set; } = 30;
     public int CancellationLimitMinutes { get; set; } = 120;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
@@ -57,6 +59,13 @@ public sealed class Service
 }
 
 public sealed class BarberService { public Guid BarberId { get; set; } public Barber? Barber { get; set; } public Guid ServiceId { get; set; } public Service? Service { get; set; } }
+public sealed class AppointmentService
+{
+    public Guid AppointmentId { get; set; }
+    public Appointment? Appointment { get; set; }
+    public Guid ServiceId { get; set; }
+    public Service? Service { get; set; }
+}
 public sealed class WorkingHour
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -78,9 +87,33 @@ public sealed class Appointment
     public Barber? Barber { get; set; }
     public Guid ServiceId { get; set; }
     public Service? Service { get; set; }
+    public List<AppointmentService> AppointmentServices { get; set; } = [];
     public DateTime StartAtUtc { get; set; }
     public DateTime EndAtUtc { get; set; }
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Confirmed;
     public string? Notes { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+}
+
+public sealed class IdempotencyRequest
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid CustomerId { get; set; }
+    public required string Key { get; set; }
+    public required string RequestHash { get; set; }
+    public Guid AppointmentId { get; set; }
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+}
+
+public sealed class OutboxMessage
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public OutboxMessageType Type { get; set; }
+    public required string Payload { get; set; }
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTime? ProcessedAtUtc { get; set; }
+    public int Attempts { get; set; }
+    public string? LastError { get; set; }
 }

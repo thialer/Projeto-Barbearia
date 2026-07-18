@@ -61,11 +61,28 @@ namespace BarberBooking.Api.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.HasIndex("TenantId");
-
                     b.HasIndex("BarberId", "StartAtUtc");
 
+                    b.HasIndex("TenantId", "StartAtUtc");
+
+                    b.HasIndex("BarberId", "Status", "StartAtUtc");
+
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("BarberBooking.Api.Domain.AppointmentService", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("AppointmentId", "ServiceId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("AppointmentServices");
                 });
 
             modelBuilder.Entity("BarberBooking.Api.Domain.Barber", b =>
@@ -111,6 +128,75 @@ namespace BarberBooking.Api.Migrations
                     b.ToTable("BarberServices");
                 });
 
+            modelBuilder.Entity("BarberBooking.Api.Domain.IdempotencyRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CustomerId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("IdempotencyRequests");
+                });
+
+            modelBuilder.Entity("BarberBooking.Api.Domain.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ProcessedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedAtUtc", "CreatedAtUtc");
+
+                    b.ToTable("OutboxMessages");
+                });
+
             modelBuilder.Entity("BarberBooking.Api.Domain.Service", b =>
                 {
                     b.Property<Guid>("Id")
@@ -139,7 +225,7 @@ namespace BarberBooking.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("TenantId", "IsActive");
 
                     b.ToTable("Services");
                 });
@@ -168,6 +254,11 @@ namespace BarberBooking.Api.Migrations
 
                     b.Property<string>("Phone")
                         .HasColumnType("text");
+
+                    b.Property<int>("SlotIntervalMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(30);
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -248,7 +339,7 @@ namespace BarberBooking.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BarberId");
+                    b.HasIndex("BarberId", "DayOfWeek");
 
                     b.ToTable("WorkingHours");
                 });
@@ -286,6 +377,25 @@ namespace BarberBooking.Api.Migrations
                     b.Navigation("Service");
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("BarberBooking.Api.Domain.AppointmentService", b =>
+                {
+                    b.HasOne("BarberBooking.Api.Domain.Appointment", "Appointment")
+                        .WithMany("AppointmentServices")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BarberBooking.Api.Domain.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("BarberBooking.Api.Domain.Barber", b =>
@@ -355,6 +465,11 @@ namespace BarberBooking.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Barber");
+                });
+
+            modelBuilder.Entity("BarberBooking.Api.Domain.Appointment", b =>
+                {
+                    b.Navigation("AppointmentServices");
                 });
 
             modelBuilder.Entity("BarberBooking.Api.Domain.Barber", b =>
