@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background-color: #F7F4EE;
+  color: #211C18;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid #B4793F;
+  outline-offset: 2px;
+}
+
+/* Barber-pole signature stripe, used sparingly as the one signature accent */
+.barber-stripe {
+  height: 6px;
+  background: repeating-linear-gradient(
+    -45deg,
+    #211C18,
+    #211C18 10px,
+    #B4793F 10px,
+    #B4793F 20px,
+    #F7F4EE 20px,
+    #F7F4EE 30px
+  );
+}
