@@ -36,6 +36,8 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("booking", context => RateLimitPartition.GetFixedWindowLimiter(
         context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
+
+// Retornar configurações do tenant para o painel admin (rota declarada mais abaixo dentro do bloco 'admin')
 builder.Services.AddOutputCache(options => options.AddPolicy("catalog", policy =>
     policy.Expire(TimeSpan.FromMinutes(5)).SetVaryByRouteValue("slug")));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -93,6 +95,19 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+        policy.WithOrigins(
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "https://localhost:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3001",
+            "https://localhost:3001"
+        ).AllowAnyHeader().AllowAnyMethod().AllowCredentials());
+});
+
 var app = builder.Build();
 
 // Swagger - UI para testar endpoints
@@ -104,6 +119,8 @@ if (app.Environment.IsDevelopment())
     // Redirecionar raiz (/) para Swagger
     app.MapGet("/", () => Results.Redirect("/swagger/index.html")).ExcludeFromDescription();
 }
+
+app.UseCors("Frontend");
 
 app.UseHttpsRedirection();
 app.UseRateLimiter();
@@ -170,7 +187,14 @@ super.MapDelete("/tenants/{tenantId:guid}", async (Guid tenantId, AppDbContext d
     return Results.NoContent();
 });
 
+// Duplicate MapGet("/settings") removed to avoid compilation error (was declared before the admin group)
 var admin = app.MapGroup("/api/admin").RequireAuthorization(p => p.RequireRole(UserRole.TenantAdmin.ToString()));
+admin.MapGet("/settings", async (ClaimsPrincipal user, AppDbContext db) =>
+{
+    var tenant = await db.Tenants.FindAsync(user.TenantId());
+    if (tenant is null) return Results.NotFound();
+    return Results.Ok(new { tenant.Name, tenant.Phone, tenant.Address, tenant.TimeZoneId, tenant.CancellationLimitMinutes, tenant.SlotIntervalMinutes });
+});
 admin.MapPut("/settings", async (UpdateTenantRequest input, ClaimsPrincipal user, AppDbContext db) =>
 {
     var tenant = await db.Tenants.FindAsync(user.TenantId()); if (tenant is null) return Results.NotFound();
@@ -203,6 +227,12 @@ admin.MapPost("/barbers", async (CreateBarberRequest input, ClaimsPrincipal user
     var account = new User { TenantId = user.TenantId(), Name = input.Name, Email = input.Email.ToLower(), PasswordHash = auth.Hash(input.Password), Role = UserRole.Barber, MustChangePassword = true };
     var barber = new Barber { TenantId = user.TenantId(), User = account, Bio = input.Bio }; db.Barbers.Add(barber); await db.SaveChangesAsync(); return Results.Created($"/api/admin/barbers/{barber.Id}", new { barber.Id, account.Email });
 });
+admin.MapGet("/barbers", async (ClaimsPrincipal user, AppDbContext db) => await db.Barbers.AsNoTracking()
+    .Include(x => x.User)
+    .Where(x => x.TenantId == user.TenantId() && x.IsActive)
+    .OrderBy(x => x.User!.Name)
+    .Select(x => new { x.Id, name = x.User!.Name, email = x.User!.Email, x.Bio, x.IsActive })
+    .ToListAsync());
 admin.MapPut("/barbers/{barberId:guid}/services", async (Guid barberId, SetBarberServicesRequest input, ClaimsPrincipal user, AppDbContext db) =>
 {
     var tenantId = user.TenantId(); var barber = await db.Barbers.SingleOrDefaultAsync(x => x.Id == barberId && x.TenantId == tenantId); if (barber is null) return Results.NotFound();
@@ -220,6 +250,18 @@ admin.MapPut("/barbers/{barberId:guid}/working-hours", async (Guid barberId, Set
     });
     if (hours.Any(x => !Enum.IsDefined(x.DayOfWeek) || x.End <= x.Start) || hasOverlappingHours) return Results.BadRequest(new { message = "Intervalos de trabalho inválidos ou sobrepostos." });
     db.WorkingHours.RemoveRange(db.WorkingHours.Where(x => x.BarberId == barberId)); db.WorkingHours.AddRange(hours.Select(x => new WorkingHour { BarberId = barberId, DayOfWeek = x.DayOfWeek, Start = x.Start, End = x.End })); await db.SaveChangesAsync(); return Results.NoContent();
+});
+admin.MapDelete("/barbers/{barberId:guid}", async (Guid barberId, ClaimsPrincipal user, AppDbContext db) =>
+{
+    var barber = await db.Barbers.SingleOrDefaultAsync(x => x.Id == barberId && x.TenantId == user.TenantId());
+    if (barber is null) return Results.NotFound();
+    if (!barber.IsActive) return Results.NoContent();
+
+    barber.IsActive = false;
+    var user_entity = await db.Users.FindAsync(barber.UserId);
+    if (user_entity is not null) user_entity.IsActive = false;
+    await db.SaveChangesAsync();
+    return Results.NoContent();
 });
 admin.MapGet("/appointments", async (DateOnly? date, int? page, int? pageSize, ClaimsPrincipal user, AppDbContext db) =>
 {
