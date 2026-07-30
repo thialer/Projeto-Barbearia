@@ -110,12 +110,16 @@ export function BookingWizard({ tenant }: { tenant: Tenant }) {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <ol className="mb-6 flex justify-between text-xs font-semibold text-steel">
+      <div className="mb-6 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass">Agendamento online</p>
+        <h2 className="mt-1 font-display text-2xl font-semibold text-ink">Escolha seu horário</h2>
+      </div>
+      <ol className="mb-8 flex justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-steel sm:text-xs">
         {["Serviço", "Barbeiro", "Data e horário", "Confirmação"].map((label, i) => (
           <li key={label} className={`flex items-center gap-1.5 ${step === i + 1 ? "text-brass-dark" : ""}`}>
             <span
               className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
-                step > i + 1 ? "bg-confirmed text-white" : step === i + 1 ? "bg-brass text-white" : "bg-ink/10"
+                step > i + 1 ? "bg-confirmed text-[#102017]" : step === i + 1 ? "bg-brass text-[#21170e]" : "bg-white/10"
               }`}
             >
               {i + 1}
@@ -134,9 +138,9 @@ export function BookingWizard({ tenant }: { tenant: Tenant }) {
                 setServiceId(s.id);
                 setStep(2);
               }}
-              className="rounded-lg border border-ink/10 bg-white p-4 text-left shadow-sm transition-colors hover:border-brass"
+              className="group rounded-lg border border-white/10 bg-surface p-5 text-left shadow-[0_12px_30px_rgba(0,0,0,.16)] transition-all hover:-translate-y-0.5 hover:border-brass hover:bg-surface-raised"
             >
-              <p className="font-semibold text-ink">{s.name}</p>
+              <p className="font-semibold text-ink transition-colors group-hover:text-brass-light">{s.name}</p>
               {s.description && <p className="mt-1 text-sm text-steel">{s.description}</p>}
               <div className="mt-2 flex justify-between text-sm">
                 <span className="font-semibold text-brass-dark">{formatCurrency(s.price)}</span>
@@ -157,9 +161,9 @@ export function BookingWizard({ tenant }: { tenant: Tenant }) {
                   setBarberId(b.id);
                   setStep(3);
                 }}
-                className="rounded-lg border border-ink/10 bg-white p-4 text-left shadow-sm transition-colors hover:border-brass"
+                className="group rounded-lg border border-white/10 bg-surface p-5 text-left shadow-[0_12px_30px_rgba(0,0,0,.16)] transition-all hover:-translate-y-0.5 hover:border-brass hover:bg-surface-raised"
               >
-                <p className="font-semibold text-ink">{b.name}</p>
+                <p className="font-semibold text-ink transition-colors group-hover:text-brass-light">{b.name}</p>
                 {b.bio && <p className="mt-1 text-sm text-steel">{b.bio}</p>}
               </button>
             ))}
@@ -189,7 +193,7 @@ export function BookingWizard({ tenant }: { tenant: Tenant }) {
                   key={slot}
                   onClick={() => setSelectedSlot(slot)}
                   className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                    selectedSlot === slot ? "border-brass bg-brass/10 text-brass-dark" : "border-ink/15 text-ink hover:border-brass"
+                    selectedSlot === slot ? "border-brass bg-brass/15 text-brass-light" : "border-white/15 bg-surface text-ink hover:border-brass"
                   }`}
                 >
                   {formatSlot(slot)}

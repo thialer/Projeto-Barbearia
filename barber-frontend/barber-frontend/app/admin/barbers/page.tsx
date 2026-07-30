@@ -102,7 +102,7 @@ function WorkingHoursEditor({ barberId }: { barberId: string }) {
         {hours.map((h, i) => (
           <div key={i} className="flex items-center gap-2">
             <select
-              className="rounded-md border border-ink/15 bg-white px-2 py-1.5 text-xs"
+              className="rounded-md border border-white/10 bg-surface-input px-2 py-1.5 text-xs text-ink"
               value={h.dayOfWeek}
               onChange={(e) => updateRow(i, "dayOfWeek", parseInt(e.target.value, 10))}
             >
@@ -114,14 +114,14 @@ function WorkingHoursEditor({ barberId }: { barberId: string }) {
             </select>
             <input
               type="time"
-              className="rounded-md border border-ink/15 bg-white px-2 py-1.5 text-xs"
+              className="rounded-md border border-white/10 bg-surface-input px-2 py-1.5 text-xs text-ink"
               value={h.start.slice(0, 5)}
               onChange={(e) => updateRow(i, "start", `${e.target.value}:00`)}
             />
             <span className="text-xs text-steel">até</span>
             <input
               type="time"
-              className="rounded-md border border-ink/15 bg-white px-2 py-1.5 text-xs"
+              className="rounded-md border border-white/10 bg-surface-input px-2 py-1.5 text-xs text-ink"
               value={h.end.slice(0, 5)}
               onChange={(e) => updateRow(i, "end", `${e.target.value}:00`)}
             />

@@ -56,7 +56,7 @@ export default function AdminAppointmentsPage() {
       ) : (
         <Card className="overflow-hidden p-0">
           <table className="w-full text-sm">
-            <thead className="border-b border-ink/10 bg-ink/[0.03] text-left text-xs uppercase tracking-wide text-steel">
+            <thead className="border-b border-white/10 bg-white/[0.04] text-left text-xs uppercase tracking-wide text-steel">
               <tr>
                 <th className="px-4 py-3">Horário</th>
                 <th className="px-4 py-3">Cliente</th>
@@ -68,7 +68,7 @@ export default function AdminAppointmentsPage() {
             </thead>
             <tbody>
               {appointments.map((a) => (
-                <tr key={a.id} className="border-b border-ink/5 last:border-0">
+                <tr key={a.id} className="border-b border-white/5 last:border-0">
                   <td className="px-4 py-3 font-medium text-ink">
                     {formatTime(a.startAtUtc)}–{formatTime(a.endAtUtc)}
                   </td>

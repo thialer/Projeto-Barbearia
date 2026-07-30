@@ -46,24 +46,24 @@ export function AuthPanel({ tenant, onDone }: { tenant: Tenant; onDone?: () => v
 
   return (
     <div className="mx-auto w-full max-w-sm">
-      <div className="mb-4 flex rounded-md border border-ink/10 bg-white p-1 text-sm">
+      <div className="mb-4 flex rounded-md border border-white/10 bg-surface p-1 text-sm">
         <button
           type="button"
           onClick={() => setMode("register")}
-          className={`flex-1 rounded-sm py-1.5 font-medium transition-colors ${mode === "register" ? "bg-ink text-cream" : "text-steel"}`}
+          className={`flex-1 rounded-sm py-1.5 font-medium transition-colors ${mode === "register" ? "bg-brass text-[#21170e]" : "text-steel"}`}
         >
           Criar conta
         </button>
         <button
           type="button"
           onClick={() => setMode("login")}
-          className={`flex-1 rounded-sm py-1.5 font-medium transition-colors ${mode === "login" ? "bg-ink text-cream" : "text-steel"}`}
+          className={`flex-1 rounded-sm py-1.5 font-medium transition-colors ${mode === "login" ? "bg-brass text-[#21170e]" : "text-steel"}`}
         >
           Já tenho conta
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-ink/10 bg-white p-5 shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-white/10 bg-surface p-5 shadow-[0_16px_40px_rgba(0,0,0,.2)]">
         {error && <Alert>{error}</Alert>}
         {mode === "register" && (
           <div>

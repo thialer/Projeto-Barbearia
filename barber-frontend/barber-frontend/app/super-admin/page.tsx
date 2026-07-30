@@ -77,9 +77,11 @@ function SuperAdminDashboard() {
 
   return (
     <div className="min-h-screen bg-cream">
-      <header className="border-b border-ink/10 bg-white">
+      <header className="border-b border-white/10 bg-surface/95 shadow-lg shadow-black/10 backdrop-blur">
+        <div className="barber-stripe" />
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brass">Gestão da plataforma</p>
             <h1 className="font-display text-xl font-semibold text-ink">BarberBooking · Super Admin</h1>
             <p className="text-xs text-steel">{user?.name}</p>
           </div>
@@ -157,7 +159,7 @@ function SuperAdminDashboard() {
           ) : (
             <Card className="overflow-hidden p-0">
               <table className="w-full text-sm">
-                <thead className="border-b border-ink/10 bg-ink/[0.03] text-left text-xs uppercase tracking-wide text-steel">
+                <thead className="border-b border-white/10 bg-white/[0.04] text-left text-xs uppercase tracking-wide text-steel">
                   <tr>
                     <th className="px-4 py-3">Nome</th>
                     <th className="px-4 py-3">Slug</th>
@@ -167,7 +169,7 @@ function SuperAdminDashboard() {
                 </thead>
                 <tbody>
                   {tenants.map((t) => (
-                    <tr key={t.id} className="border-b border-ink/5 last:border-0">
+                    <tr key={t.id} className="border-b border-white/5 last:border-0">
                       <td className="px-4 py-3 font-medium text-ink">{t.name}</td>
                       <td className="px-4 py-3 text-steel">/{t.slug}</td>
                       <td className="px-4 py-3">

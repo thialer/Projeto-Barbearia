@@ -19,9 +19,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-cream">
-      <header className="border-b border-ink/10 bg-white">
+      <header className="border-b border-white/10 bg-surface/95 shadow-lg shadow-black/10 backdrop-blur">
+        <div className="barber-stripe" />
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brass">Área administrativa</p>
             <h1 className="font-display text-xl font-semibold text-ink">BarberBooking</h1>
             <p className="text-xs text-steel">{user?.name}</p>
           </div>
@@ -29,14 +31,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             Sair
           </Button>
         </div>
-        <nav className="mx-auto flex max-w-5xl gap-1 px-6">
+        <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-6">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={`border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
                 pathname === item.href
-                  ? "border-brass text-ink"
+                  ? "border-brass text-brass-light"
                   : "border-transparent text-steel hover:text-ink"
               }`}
             >

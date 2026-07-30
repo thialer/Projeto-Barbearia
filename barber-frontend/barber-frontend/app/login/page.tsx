@@ -49,11 +49,13 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-cream px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-brass/60 bg-brass/10 text-2xl text-brass">✂</div>
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-brass">Gestão profissional</p>
           <h1 className="font-display text-3xl font-semibold text-ink">BarberBooking</h1>
           <p className="mt-1 text-sm text-steel">Painel administrativo</p>
         </div>
         <div className="barber-stripe mb-6 rounded-full" />
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-ink/10 bg-white p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-white/10 bg-surface p-6 shadow-[0_20px_50px_rgba(0,0,0,.3)]">
           {error && <Alert>{error}</Alert>}
           <div>
             <Label htmlFor="email">E-mail</Label>

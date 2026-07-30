@@ -61,7 +61,7 @@ export default function TrocarSenhaPage() {
         <p className="mb-6 text-sm text-steel">
           Por segurança, troque a senha provisória antes de continuar.
         </p>
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-ink/10 bg-white p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-white/10 bg-surface p-6 shadow-[0_20px_50px_rgba(0,0,0,.3)]">
           {error && <Alert>{error}</Alert>}
           <div>
             <Label htmlFor="current">Senha atual (provisória)</Label>

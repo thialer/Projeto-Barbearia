@@ -4,13 +4,17 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap");
 
-:root {
-  color-scheme: light;
-}
+:root { color-scheme: dark; }
+
+html { background: #10151D; }
 
 body {
-  background-color: #F7F4EE;
-  color: #211C18;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% -10%, rgba(217, 167, 102, .15), transparent 32rem),
+    radial-gradient(circle at 100% 20%, rgba(65, 84, 108, .22), transparent 30rem),
+    #10151D;
+  color: #F4EFE7;
 }
 
 * {
@@ -18,20 +22,26 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid #B4793F;
+  outline: 2px solid #D9A766;
   outline-offset: 2px;
 }
 
-/* Barber-pole signature stripe, used sparingly as the one signature accent */
 .barber-stripe {
-  height: 6px;
+  height: 4px;
   background: repeating-linear-gradient(
     -45deg,
-    #211C18,
-    #211C18 10px,
-    #B4793F 10px,
-    #B4793F 20px,
-    #F7F4EE 20px,
-    #F7F4EE 30px
+    #D9A766,
+    #D9A766 12px,
+    #F3D5A8 12px,
+    #F3D5A8 24px,
+    #B9793E 24px,
+    #B9793E 36px
   );
 }
+
+::selection { background: rgba(217, 167, 102, .35); color: #fff; }
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1) sepia(.2); }
+
+input, select, textarea { color-scheme: dark; }
