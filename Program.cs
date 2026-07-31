@@ -231,17 +231,29 @@ admin.MapGet("/barbers", async (ClaimsPrincipal user, AppDbContext db) => await 
     .Include(x => x.User)
     .Where(x => x.TenantId == user.TenantId() && x.IsActive)
     .OrderBy(x => x.User!.Name)
-    .Select(x => new { x.Id, name = x.User!.Name, email = x.User!.Email, x.Bio, x.IsActive })
+    .Select(x => new
+    {
+        x.Id,
+        name = x.User!.Name,
+        email = x.User!.Email,
+        x.Bio,
+        x.IsActive,
+        serviceIds = x.BarberServices.Select(service => service.ServiceId),
+        workingHours = x.WorkingHours
+            .OrderBy(hour => hour.DayOfWeek)
+            .ThenBy(hour => hour.Start)
+            .Select(hour => new { dayOfWeek = hour.DayOfWeek, hour.Start, hour.End })
+    })
     .ToListAsync());
-admin.MapPut("/barbers/{barberId:guid}/services", async (Guid barberId, SetBarberServicesRequest input, ClaimsPrincipal user, AppDbContext db) =>
+admin.MapPut("/barbers/{barberId:guid}/services", async (Guid barberId, SetBarberServicesRequest input, ClaimsPrincipal user, AppDbContext db, SchedulingCache schedulingCache) =>
 {
     var tenantId = user.TenantId(); var barber = await db.Barbers.SingleOrDefaultAsync(x => x.Id == barberId && x.TenantId == tenantId); if (barber is null) return Results.NotFound();
     var ids = input.ServiceIds.Distinct().ToArray(); if (await db.Services.CountAsync(x => x.TenantId == tenantId && ids.Contains(x.Id)) != ids.Length) return Results.BadRequest(new { message = "Há serviços inválidos." });
-    db.BarberServices.RemoveRange(db.BarberServices.Where(x => x.BarberId == barberId)); db.BarberServices.AddRange(ids.Select(x => new BarberService { BarberId = barberId, ServiceId = x })); await db.SaveChangesAsync(); return Results.NoContent();
+    db.BarberServices.RemoveRange(db.BarberServices.Where(x => x.BarberId == barberId)); db.BarberServices.AddRange(ids.Select(x => new BarberService { BarberId = barberId, ServiceId = x })); await db.SaveChangesAsync(); await schedulingCache.InvalidateTenant(tenantId); return Results.NoContent();
 });
-admin.MapPut("/barbers/{barberId:guid}/working-hours", async (Guid barberId, SetWorkingHoursRequest input, ClaimsPrincipal user, AppDbContext db) =>
+admin.MapPut("/barbers/{barberId:guid}/working-hours", async (Guid barberId, SetWorkingHoursRequest input, ClaimsPrincipal user, AppDbContext db, SchedulingCache schedulingCache) =>
 {
-    var barber = await db.Barbers.SingleOrDefaultAsync(x => x.Id == barberId && x.TenantId == user.TenantId()); if (barber is null) return Results.NotFound();
+    var tenantId = user.TenantId(); var barber = await db.Barbers.SingleOrDefaultAsync(x => x.Id == barberId && x.TenantId == tenantId); if (barber is null) return Results.NotFound();
     var hours = input.Hours.ToArray();
     var hasOverlappingHours = hours.GroupBy(x => x.DayOfWeek).Any(group =>
     {
@@ -249,7 +261,7 @@ admin.MapPut("/barbers/{barberId:guid}/working-hours", async (Guid barberId, Set
         return ordered.Zip(ordered.Skip(1), (current, next) => next.Start < current.End).Any(x => x);
     });
     if (hours.Any(x => !Enum.IsDefined(x.DayOfWeek) || x.End <= x.Start) || hasOverlappingHours) return Results.BadRequest(new { message = "Intervalos de trabalho inválidos ou sobrepostos." });
-    db.WorkingHours.RemoveRange(db.WorkingHours.Where(x => x.BarberId == barberId)); db.WorkingHours.AddRange(hours.Select(x => new WorkingHour { BarberId = barberId, DayOfWeek = x.DayOfWeek, Start = x.Start, End = x.End })); await db.SaveChangesAsync(); return Results.NoContent();
+    db.WorkingHours.RemoveRange(db.WorkingHours.Where(x => x.BarberId == barberId)); db.WorkingHours.AddRange(hours.Select(x => new WorkingHour { BarberId = barberId, DayOfWeek = x.DayOfWeek, Start = x.Start, End = x.End })); await db.SaveChangesAsync(); await schedulingCache.InvalidateTenant(tenantId); return Results.NoContent();
 });
 admin.MapDelete("/barbers/{barberId:guid}", async (Guid barberId, ClaimsPrincipal user, AppDbContext db) =>
 {
@@ -317,6 +329,8 @@ publicApi.MapGet("/availability", async (string slug, Guid barberId, Guid? servi
     if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var bookingDate))
         return Results.BadRequest(new { message = "Data invÃ¡lida. Use o formato AAAA-MM-DD." });
     var tenant = await db.Tenants.SingleOrDefaultAsync(x => x.Slug == slug && x.IsActive); if (tenant is null) return Results.NotFound();
+    if (serviceId is not null && serviceIds is { Length: > 0 })
+        return Results.BadRequest(new { message = "Informe serviceId ou serviceIds, mas n\u00e3o os dois." });
     var requestedServiceIds = serviceIds is { Length: > 0 } ? serviceIds : (serviceId is { } legacyServiceId ? [legacyServiceId] : []);
     var slots = await booking.AvailableSlots(tenant.Id, barberId, requestedServiceIds, bookingDate);
     return slots is null ? Results.BadRequest(new { message = "Barbeiro ou serviços inválidos." }) : Results.Ok(slots);

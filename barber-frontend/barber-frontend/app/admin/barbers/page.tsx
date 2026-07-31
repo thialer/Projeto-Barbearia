@@ -8,10 +8,14 @@ interface SessionBarber {
   id: string;
   name: string;
   email: string;
+  serviceIds: string[];
+  workingHours: WorkingHour[];
 }
 
-function ServicesPicker({ barberId, services }: { barberId: string; services: Service[] }) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+const DEFAULT_WORKING_HOURS: WorkingHour[] = [{ dayOfWeek: 1, start: "09:00:00", end: "18:00:00" }];
+
+function ServicesPicker({ barberId, services, initialServiceIds }: { barberId: string; services: Service[]; initialServiceIds: string[] }) {
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(initialServiceIds));
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +68,10 @@ function ServicesPicker({ barberId, services }: { barberId: string; services: Se
   );
 }
 
-function WorkingHoursEditor({ barberId }: { barberId: string }) {
-  const [hours, setHours] = useState<WorkingHour[]>([{ dayOfWeek: 1, start: "09:00:00", end: "18:00:00" }]);
+function WorkingHoursEditor({ barberId, initialHours }: { barberId: string; initialHours: WorkingHour[] }) {
+  const [hours, setHours] = useState<WorkingHour[]>(() =>
+    (initialHours.length > 0 ? initialHours : DEFAULT_WORKING_HOURS).map((hour) => ({ ...hour }))
+  );
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +81,7 @@ function WorkingHoursEditor({ barberId }: { barberId: string }) {
   }
 
   function addRow() {
-    setHours((prev) => [...prev, { dayOfWeek: 1, start: "09:00:00", end: "18:00:00" }]);
+    setHours((prev) => [...prev, ...DEFAULT_WORKING_HOURS.map((hour) => ({ ...hour }))]);
   }
 
   function removeRow(index: number) {
@@ -165,7 +171,7 @@ export default function BarbersPage() {
     setCreating(true);
     try {
       const result = await api.admin.createBarber(form);
-      setBarbers((prev) => [...prev, { id: result.id, name: form.name, email: result.email }]);
+      setBarbers((prev) => [...prev, { id: result.id, name: form.name, email: result.email, serviceIds: [], workingHours: [] }]);
       setCreated({ email: result.email, password: form.password });
       setForm({ name: "", email: "", password: "", bio: "" });
     } catch (err) {
@@ -224,11 +230,11 @@ export default function BarbersPage() {
                 </h3>
                 <div className="mb-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-steel">Serviços que ele realiza</p>
-                  <ServicesPicker barberId={b.id} services={services} />
+                  <ServicesPicker barberId={b.id} services={services} initialServiceIds={b.serviceIds} />
                 </div>
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-steel">Horário de trabalho</p>
-                  <WorkingHoursEditor barberId={b.id} />
+                  <WorkingHoursEditor barberId={b.id} initialHours={b.workingHours} />
                 </div>
                 <div className="mt-4 border-t pt-4">
                   <Button

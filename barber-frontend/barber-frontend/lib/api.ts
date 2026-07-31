@@ -217,7 +217,7 @@ export const api = {
         method: "POST",
         body: JSON.stringify(input),
       }),
-    listBarbers: () => request<{ id: string; name: string; email: string; bio: string | null; isActive: boolean }[]>("/api/admin/barbers"),
+    listBarbers: () => request<{ id: string; name: string; email: string; bio: string | null; isActive: boolean; serviceIds: string[]; workingHours: WorkingHour[] }[]>("/api/admin/barbers"),
     deleteBarber: (barberId: string) =>
       request<void>(`/api/admin/barbers/${barberId}`, { method: "DELETE" }),
     setBarberServices: (barberId: string, serviceIds: string[]) =>
