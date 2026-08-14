@@ -3,6 +3,7 @@ using System.Text;
 using System.Globalization;
 using System.Threading.RateLimiting;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.DataProtection;
 using BarberBooking.Api.Contracts;
 using BarberBooking.Api.Domain;
 using BarberBooking.Api.Infrastructure;
@@ -16,6 +17,11 @@ using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
+// Mantém as chaves de proteção da aplicação separadas das chaves do perfil do Windows.
+// Isso evita que uma chave antiga ou criada por outro usuário impeça a API de iniciar.
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, ".data-protection-keys")))
+    .SetApplicationName("BarberBooking.Api");
 builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<BookingService>();
@@ -68,6 +74,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 });
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
+// Allow case-insensitive JSON binding for minimal API model binding (accept camelCase from frontend)
+builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.PropertyNameCaseInsensitive = true);
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
@@ -139,12 +147,36 @@ if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Dat
         db.Users.Add(new User { Name = "Super Admin", Email = builder.Configuration["Seed:SuperAdminEmail"]!, PasswordHash = auth.Hash(builder.Configuration["Seed:SuperAdminPassword"]!), Role = UserRole.SuperAdmin, MustChangePassword = true });
         await db.SaveChangesAsync();
     }
+    else if (app.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>("Seed:ResetSuperAdminPasswordOnStartup"))
+    {
+        var email = builder.Configuration["Seed:SuperAdminEmail"]!.Trim().ToLowerInvariant();
+        var password = builder.Configuration["Seed:SuperAdminPassword"]!;
+        var superAdmin = await db.Users.SingleOrDefaultAsync(x => x.Role == UserRole.SuperAdmin && x.Email == email);
+        if (superAdmin is not null)
+        {
+            var auth = scope.ServiceProvider.GetRequiredService<AuthService>();
+            superAdmin.PasswordHash = auth.Hash(password);
+            superAdmin.IsActive = true;
+            superAdmin.MustChangePassword = true;
+            await db.SaveChangesAsync();
+        }
+    }
 }
 
 app.MapGet("/health", async (AppDbContext db) =>
     await db.Database.CanConnectAsync()
         ? Results.Ok(new { status = "healthy" })
         : Results.Json(new { status = "unhealthy" }, statusCode: StatusCodes.Status503ServiceUnavailable));
+
+// Debug route (development only) para checar existência do SuperAdmin
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/debug/superadmin", async (AppDbContext db) =>
+    {
+        var admins = await db.Users.Where(u => u.Role == UserRole.SuperAdmin).Select(u => new { u.Id, u.Email, u.IsActive, u.CreatedAtUtc }).ToListAsync();
+        return Results.Ok(admins);
+    }).ExcludeFromDescription();
+}
 
 var authApi = app.MapGroup("/api/auth").RequireRateLimiting("auth");
 authApi.MapPost("/login", async (LoginRequest input, AppDbContext db, AuthService auth) =>

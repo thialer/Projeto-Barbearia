@@ -1,8 +1,9 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/barbearias/[slug]/page": "app/barbearias/[slug]/page.js",
   "/login/page": "app/login/page.js",
+  "/trocar-senha/page": "app/trocar-senha/page.js",
   "/super-admin/page": "app/super-admin/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/services/page": "app/admin/services/page.js",
   "/admin/barbers/page": "app/admin/barbers/page.js",
-  "/admin/services/page": "app/admin/services/page.js"
+  "/admin/settings/page": "app/admin/settings/page.js"
 }

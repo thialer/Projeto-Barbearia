@@ -61,6 +61,7 @@ appsettings.*.json
 # Secrets and credentials
 secrets.json
 .secrets/
+.data-protection-keys/
 .env
 .env.local
 .env.*.local
